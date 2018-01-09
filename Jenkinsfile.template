@@ -1,0 +1,58 @@
+@NonCPS
+def extractModuleName() {
+    echo ("Extracting module name from job name: ${env.JOB_NAME}")
+    jobMatcher = "${env.JOB_NAME}".split('/')
+    ret = jobMatcher[1]
+    jobMatcher = null
+    return ret;
+}
+
+def extractVersionName() {
+    echo ("Extracting version name from job name: ${env.JOB_NAME}")
+    jobMatcher = "${env.JOB_NAME}".split('/')
+    ret = jobMatcher[2]
+    jobMatcher = null
+    return ret;
+}
+
+
+env.PATH = "${tool 'Ant'}/bin:${env.PATH}"
+
+stage ('Preparations') {
+  properties ([
+    buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '6')),
+    pipelineTriggers([[ $class: 'hudson.triggers.TimerTrigger', spec  : "1 3 * * *"]]),
+    disableConcurrentBuilds(),
+    [$class: 'CopyArtifactPermissionProperty', projectNames: 'Processes/ModuleTests']
+  ])
+}
+
+stage ('Test') {
+  def moduleName = extractModuleName()
+  def versionName = extractVersionName()
+  step ([$class: 'CopyArtifact', projectName: "Yambas/${versionName}", filter: '**/target/yambas.war']);
+  
+  sh "mvn -B -f ${moduleName}-integrationtest/pom.xml clean install -Dyambas_war_dir=../yambas/target/yambas.war -P integrationtest ${MVN_OPTS}"
+}
+
+ stage ('Package') {
+  def moduleName = extractModuleName()
+  sh "mvn -B -f ${moduleName}/pom.xml clean install -Dant.target=package"
+}
+
+stage ('Archive') {
+  archiveArtifacts artifacts: '**/dist/*.jar'
+}
+
+stage ('Publish') {
+  openTasks asRegexp: true, canComputeNew: false, defaultEncoding: '', 
+                excludePattern: '**/target/**/*.*,**/lib/**', ignoreCase: false, 
+                high: '^.*((?:TODO|FIXME|XXX)(?! AOM)(.*))$', low: '^.*(XXX (AOM-\\d+.*))$', normal: '^.*((?:TODO|FIXME) (AOM-\\d+.*))$',
+                pattern: '**/*.java,**/*.iss,**/*.vm,**/*.js,**/*.cs,**/*.swift,**/*.m', 
+                thresholdLimit: 'high'
+  step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
+}
+
+stage ('Notifications') {
+  cleanWs notFailBuild: true
+}
