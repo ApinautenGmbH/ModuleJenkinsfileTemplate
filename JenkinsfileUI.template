@@ -1,13 +1,3 @@
-@NonCPS
-def extractUIName() {
-    def uiJson = readJSON file: 'manifest.json'
-    echo ("Extracting UI name from manifest file " + uiJson)
-    ret = uiJson.name
-    return ret;
-}
-
-env.PATH = "${tool 'Ant'}/bin:${env.PATH}"
-
 stage ('Preparations') {
   properties ([
     buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '6')),
@@ -19,7 +9,9 @@ stage ('Preparations') {
 
 
  stage ('Package and Archive') {
-  def uiName = extractUIName()
+  def uiJson = readJSON file: 'manifest.json'
+  echo ("Extracting UI name from manifest file " + uiJson)
+  def uiName = uiJson.name
   zip archive: true, dir: '', glob: '', zipFile: "${uiName}.zip"
 }
 
