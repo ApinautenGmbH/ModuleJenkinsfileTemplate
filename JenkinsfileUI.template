@@ -1,8 +1,7 @@
 @NonCPS
 def extractUIName() {
-    echo ("Extracting UI name from manifest")
-
-    uiJson = readJSON file: 'manifest.json'
+    def uiJson = readJSON file: 'manifest.json'
+    echo ("Extracting UI name from manifest " + uiJson)
     ret = uiJson.name
     return ret;
 }
