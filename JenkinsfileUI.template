@@ -1,0 +1,38 @@
+@NonCPS
+def extractUIName() {
+    echo ("Extracting module name from job name: ${env.JOB_NAME}")
+    jobMatcher = "${env.JOB_NAME}".split('/')
+    ret = jobMatcher[1]
+    jobMatcher = null
+    return ret;
+}
+
+def extractVersionName() {
+    echo ("Extracting version name from job name: ${env.JOB_NAME}")
+    jobMatcher = "${env.JOB_NAME}".split('/')
+    ret = jobMatcher[2]
+    jobMatcher = null
+    return ret;
+}
+
+
+env.PATH = "${tool 'Ant'}/bin:${env.PATH}"
+
+stage ('Preparations') {
+  properties ([
+    buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '6')),
+    pipelineTriggers([[ $class: 'hudson.triggers.TimerTrigger', spec  : "1 3 * * *"]]),
+    disableConcurrentBuilds(),
+    [$class: 'CopyArtifactPermissionProperty', projectNames: 'Processes/ModuleTests']
+  ])
+}
+
+
+ stage ('Package and Archive') {
+  def uiName = extractUIName()
+  zip archive: true, dir: '', glob: '', zipFile: "${uiName}"
+}
+
+stage ('Notifications') {
+  cleanWs notFailBuild: true
+}
