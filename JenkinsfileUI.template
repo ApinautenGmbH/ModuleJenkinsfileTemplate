@@ -30,7 +30,7 @@ stage ('Preparations') {
 
  stage ('Package and Archive') {
   def uiName = extractUIName()
-  zip archive: true, dir: '', glob: '', zipFile: "${uiName}"
+  zip archive: true, dir: '', glob: '', zipFile: "${uiName}.zip"
 }
 
 stage ('Notifications') {
