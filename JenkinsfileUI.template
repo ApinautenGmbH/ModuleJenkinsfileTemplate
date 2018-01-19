@@ -1,9 +1,9 @@
 @NonCPS
 def extractUIName() {
-    echo ("Extracting module name from job name: ${env.JOB_NAME}")
-    jobMatcher = "${env.JOB_NAME}".split('/')
-    ret = jobMatcher[1]
-    jobMatcher = null
+    echo ("Extracting UI name from manifest")
+
+    uiJson = readJSON file: 'manifest.json'
+    ret = uiJson.name
     return ret;
 }
 
