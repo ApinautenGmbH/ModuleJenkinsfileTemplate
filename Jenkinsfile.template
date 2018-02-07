@@ -38,13 +38,13 @@ stage ('Test') {
   
   if ( !(versionName ==~ /[0-9]\.[0-9]/ ) )
   {
-    echo ("No valid version number was found. Trying to extract version number from parent branch.")
+    echo ("The version number '${versionName}' is not valid. Trying to extract version number from parent branch.")
     versionName = extractVersionNameFromParentBranch()
   }
   
   if ( !(versionName ==~ /[0-9]\.[0-9]/ ) )
   {
-    echo ("No valid version number was found. The fall back Yambas version 3.0 is used.")
+    echo ("The version number '${versionName}' is not valid. The fall back Yambas version 3.0 is used instead.")
     versionName = "3.0"
   }
   
