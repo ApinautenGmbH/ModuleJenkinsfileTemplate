@@ -15,6 +15,11 @@ def extractVersionName() {
     return ret;
 }
 
+def extractVersionNameFromParentBranch() {
+    echo ("Extracting version name from parent branch")
+    ret = sh( returnStdout: true, script: "git show-branch -a | grep '\*' | grep -v `git rev-parse --abbrev-ref HEAD` | head -n1 | sed 's/.*\[\(.*\)\].*/\1/' | sed 's/[\^~].*//'" )
+    return ret;
+}
 
 env.PATH = "${tool 'Ant'}/bin:${env.PATH}"
 
@@ -30,12 +35,25 @@ stage ('Preparations') {
 stage ('Test') {
   def moduleName = extractModuleName()
   def versionName = extractVersionName()
+  
+  if ( !(versionName ==~ /[0-9]\.[0-9]/ ) )
+  {
+    echo ("No valid version number was found. Trying to extract version number from parent branch.")
+    versionName = extractVersionNameFromParentBranch()
+  }
+  
+  if ( !(versionName ==~ /[0-9]\.[0-9]/ ) )
+  {
+    echo ("No valid version number was found. The fall back Yambas version 3.0 is used.")
+    versionName = "3.0"
+  }
+  
   step ([$class: 'CopyArtifact', projectName: "Yambas/${versionName}", filter: '**/target/yambas.war']);
   
   sh "mvn -B -f ${moduleName}-integrationtest/pom.xml clean install -Dyambas_war_dir=../yambas/target/yambas.war -P integrationtest ${MVN_OPTS}"
 }
 
- stage ('Package') {
+stage ('Package') {
   def moduleName = extractModuleName()
   sh "mvn -B -f ${moduleName}/pom.xml clean install -Dant.target=package"
 }
