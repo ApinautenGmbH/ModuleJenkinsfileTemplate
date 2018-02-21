@@ -29,6 +29,8 @@ stage ('Preparations') {
     disableConcurrentBuilds(),
     [$class: 'CopyArtifactPermissionProperty', projectNames: 'Processes/ModuleTests']
   ])
+  
+  sh "sudo /var/lib/jenkins/clearMongo.sh"
 }
 
 stage ('Test') {
