@@ -16,7 +16,7 @@ def extractVersionName() {
 }
 
 def extractVersionNameFromParentBranch() {
-    sh returnStatus: true, script: "git show-branch -a | grep '\\*' | grep -v `git rev-parse --abbrev-ref HEAD` | head -n1 | sed 's/.*\\[\\(.*\\)\\].*/\\1/'  | sed 's/[\\^~].*//' > branch.txt" 
+    sh returnStatus: true, script: "git show-branch -a \| grep '\\*' \| grep -v `git rev-parse --abbrev-ref HEAD` \| head -n1 \| sed 's/.*\\[\\(.*\\)\\].*/\\1/'  \| sed 's/[\\^~].*//' > branch.txt" 
     ret = readFile 'branch.txt' 
     return ret;
 }
