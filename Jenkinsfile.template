@@ -15,9 +15,16 @@ def extractVersionName() {
     return ret;
 }
 
-def extractVersionNameFromParentBranch() {
-    sh returnStatus: true, script: "git show-branch -a | grep '\\*' | grep -v `git rev-parse --abbrev-ref HEAD` | head -n1 | sed 's/.*\\[\\(.*\\)\\].*/\\1/' | sed 's/[\\^~].*//' > branch.txt" 
+def extractVersionNameFromParentBranch(branchName) {
+		sh "git config --replace-all remote.origin.fetch +refs/heads/*:refs/remotes/origin/*"
+		sh "git fetch --all"
+		sh "git checkout ${branchName}"
+    sh( returnStatus: true, script:  'git show-branch -a | grep \'\\*\' | grep -v `git rev-parse --abbrev-ref HEAD` | head -n1 | sed \'s/.*\\[\\(.*\\)\\].*/\\1/\' | sed \'s/[\\^~].*//\' > branch.txt')
     ret = readFile 'branch.txt' 
+		if(ret.startsWith("origin/"))
+		{
+			ret = ret.substring(7).replaceAll("\n","");
+		}
     return ret;
 }
 
@@ -37,11 +44,13 @@ stage ('Preparations') {
 stage ('Test') {
   def moduleName = extractModuleName()
   def versionName = extractVersionName()
+	def branchName = "${env.BRANCH_NAME}"
+	echo("current branch name is ${branchName}")
   
   if ( !(versionName ==~ /[0-9]\.[0-9]/ ) )
   {
     echo ("The version number '${versionName}' is not valid. Trying to extract version number from parent branch.")
-    versionName = extractVersionNameFromParentBranch()
+    versionName = extractVersionNameFromParentBranch( branchName )
   }
   
   if ( !(versionName ==~ /[0-9]\.[0-9]/ ) )
