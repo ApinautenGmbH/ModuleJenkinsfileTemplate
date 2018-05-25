@@ -11,7 +11,7 @@ stage ('Preparations') {
   def files = findFiles(glob: '**/manifest.json')
   def workspace = pwd()
   def manifestFile = workspace + "/" + files[0].path
-  def uiJson = readJSON file: "./" + manifestFile
+  def uiJson = readJSON file: manifestFile
 
   echo ("Extracting UI name from manifest file " + uiJson)
   // def uiName = uiJson.name
