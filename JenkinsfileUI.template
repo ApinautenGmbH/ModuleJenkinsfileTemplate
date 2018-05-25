@@ -9,8 +9,9 @@ stage ('Preparations') {
 
 
  stage ('Package and Archive') {
-  def manifestFile = findFiles(glob: '*/manifest.json')
+  def manifestFile = findFiles(glob: '**/manifest.json')
   echo manifestFile[0].path
+  echo manifestFile[0].directory
   def uiJson = readJSON file: manifestFile[0].path
   echo ("Extracting UI name from manifest file " + uiJson)
   def uiName = uiJson.name
