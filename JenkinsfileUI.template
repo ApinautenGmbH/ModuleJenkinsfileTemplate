@@ -9,16 +9,11 @@ stage ('Preparations') {
 
  stage ('Package and Archive') {
   def files = findFiles(glob: '**/manifest.json')
-  echo ("path:" + files[0].path)
-  echo ("name: " + files[0].name)
-
   def workspace = pwd()
   def manifestFile = workspace + "/" + files[0].path
-  //def uiJson = readJSON file: "./" + manifestFile
+  def uiJson = readJSON file: "./" + manifestFile
 
-  echo ("manifestFile: " + manifestFile)
-
-  // echo ("Extracting UI name from manifest file " + uiJson)
+  echo ("Extracting UI name from manifest file " + uiJson)
   // def uiName = uiJson.name
   // sh "zip -r ${uiName}.zip ${uiName}" 
   // sh "zip -r ${uiName}.zip ${uiName} -x 'Jenkinsfile, JenkinsfileUI.template, .gitignore'" 
