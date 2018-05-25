@@ -11,13 +11,13 @@ stage ('Preparations') {
   def manifestFile = findFiles(glob: '**/manifest.json')
   echo ("path:" + ${manifestFile[0].path})
   echo ("name: " + ${manifestFile[0].name})
-  // def uiJson = readJSON file: manifestFile[0].path
-  // echo ("Extracting UI name from manifest file " + uiJson)
-  // def uiName = uiJson.name
-  // sh "zip -r ${uiName}.zip ${uiName}" 
-  // sh "zip -r ${uiName}.zip ${uiName} -x 'Jenkinsfile, JenkinsfileUI.template, .gitignore'" 
+  def uiJson = readJSON file: manifestFile[0].path
+  echo ("Extracting UI name from manifest file " + uiJson)
+  def uiName = uiJson.name
+  sh "zip -r ${uiName}.zip ${uiName}" 
+  sh "zip -r ${uiName}.zip ${uiName} -x 'Jenkinsfile, JenkinsfileUI.template, .gitignore'" 
 
-  // archive "${uiName}.zip"
+  archive "${uiName}.zip"
   //zip archive: true, dir: '', glob: 'neededModules/**, ${uiName}.zip, Readme.md, manifest.json', zipFile: "${uiName}.zip"
 }
 
