@@ -12,7 +12,7 @@ stage ('Preparations') {
   def uiJson = readJSON file: 'manifest.json'
   echo ("Extracting UI name from manifest file " + uiJson)
   def uiName = uiJson.name
-  zip archive: true, dir: "${uiName}", glob: '', zipFile: "${uiName}.zip"
+  zip archive: true, dir: "", glob: '', zipFile: "${uiName}.zip"
 }
 
 stage ('Notifications') {
