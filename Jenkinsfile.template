@@ -20,7 +20,7 @@ def extractVersionNameFromParentBranch(branchName) {
 		sh "git fetch --all"
 		sh "git checkout ${branchName}"
     sh( returnStatus: true, script:  'git show-branch -a | grep \'\\*\' | grep -v `git rev-parse --abbrev-ref HEAD` | head -n1 | sed \'s/.*\\[\\(.*\\)\\].*/\\1/\' | sed \'s/[\\^~].*//\' > branch.txt')
-    ret = readFile 'branch.txt' 
+    ret = readFile 'branch.txt'
 		if(ret.startsWith("origin/"))
 		{
 			ret = ret.substring(7).replaceAll("\n","");
@@ -42,7 +42,7 @@ stage ('Preparations') {
       ]
     )
   ])
-  
+
   sh "sudo /var/lib/jenkins/clearMongo.sh"
 }
 
@@ -54,20 +54,19 @@ stage ('Test') {
     def versionName = extractVersionName()
     def branchName = "${env.BRANCH_NAME}"
     echo("current branch name is ${branchName}")
-    
+
     if ( !(versionName ==~ /[0-9]\.[0-9]/ ) )
     {
       echo ("The version number '${versionName}' is not valid. Trying to extract version number from parent branch.")
       versionName = extractVersionNameFromParentBranch( branchName )
     }
-    
+
     if ( !(versionName ==~ /[0-9]\.[0-9]/ ) )
     {
       echo ("The version number '${versionName}' is not valid. The fall back Yambas version 3.0 is used instead.")
       versionName = "3.0"
     }
-
-    step ([$class: 'CopyArtifact', projectName: "Yambas/${versionName}", filter: '**/target/yambas.war', selector: lastSuccessful()]);
+    copyArtifacts(projectName: "Yambas/${versionName}", filter: '**/target/yambas.war', selector: lastSuccessful())
 
     sh "mvn -B -f ${moduleName}-integrationtest/pom.xml clean install -Dyambas_war_dir=../yambas/target/yambas.war -P integrationtest ${MVN_OPTS}"
   }
@@ -84,10 +83,10 @@ stage ('Archive') {
 
 stage ('Publish') {
   if( RUN_TESTS ){
-    openTasks asRegexp: true, canComputeNew: false, defaultEncoding: '', 
-                  excludePattern: '**/target/**/*.*,**/lib/**', ignoreCase: false, 
+    openTasks asRegexp: true, canComputeNew: false, defaultEncoding: '',
+                  excludePattern: '**/target/**/*.*,**/lib/**', ignoreCase: false,
                   high: '^.*((?:TODO|FIXME|XXX)(?! AOM)(.*))$', low: '^.*(XXX (AOM-\\d+.*))$', normal: '^.*((?:TODO|FIXME) (AOM-\\d+.*))$',
-                  pattern: '**/*.java,**/*.iss,**/*.vm,**/*.js,**/*.cs,**/*.swift,**/*.m', 
+                  pattern: '**/*.java,**/*.iss,**/*.vm,**/*.js,**/*.cs,**/*.swift,**/*.m',
                   thresholdLimit: 'high'
     step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
   }
