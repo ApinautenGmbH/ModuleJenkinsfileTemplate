@@ -63,10 +63,9 @@ stage ('Test') {
 
     if ( !(versionName ==~ /[0-9]\.[0-9]/ ) )
     {
-      echo ("The version number '${versionName}' is not valid. The fall back Yambas version 3.0 is used instead.")
-      versionName = "3.0"
+      echo ("The version number '${versionName}' is not valid. Trying to get the artifact from a related branch directly.")
     }
-    copyArtifacts(projectName: "Yambas/${versionName}", filter: '**/target/yambas.war', selector: lastSuccessful())
+    copyArtifacts(projectName: "Yambas/${branchName}", filter: '**/target/yambas.war', selector: lastSuccessful())
 
     sh "mvn -B -f ${moduleName}-integrationtest/pom.xml clean install -Dyambas_war_dir=../yambas/target/yambas.war -P integrationtest ${MVN_OPTS}"
   }
