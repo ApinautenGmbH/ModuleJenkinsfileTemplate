@@ -1,3 +1,38 @@
+// checks whether the given yambas version is higher or equal to the required version
+@NonCPS
+def isVersionGte( currentVersion, requiredVersion ) 
+{
+    echo ( "Comparing version $currentVersion to $requiredVersion" )
+    try
+    {
+        vMatcher1 = ("$currentVersion" =~ /(\d+)\.(\d+)/)
+        vMatcher2 = ("$requiredVersion" =~ /(\d+)\.(\d+)/)
+        major1 = vMatcher1[0][1].toInteger()
+        echo("major1: $major1")
+        minor1 = vMatcher1[0][2].toInteger()
+        echo("minor1: $minor1")
+        major2 = vMatcher2[0][1].toInteger()
+        echo("major2: $major2")
+        minor2 = vMatcher2[0][2].toInteger()
+        echo("minor2: $minor2")
+        echo("Yambas Version major: $major1, minor: $minor1") 
+        echo("Required Version major: $major2, minor: $minor2") 
+        return ( major2 < major1 || major2 == major1 && minor2 < minor1 || major2 == major1 && minor2==minor1 )|| (major2 == major1 && minor2 == minor1 )
+    } 
+    catch( Exception e )
+    {
+        e.printStackTrace()
+        ret = false
+        println e
+    }
+    finally 
+    {
+        vMatcher1 = null
+        vMatcher2 = null
+    }
+    return ret;
+}
+
 @NonCPS
 def extractModuleName() {
     echo ("Extracting module name from job name: ${env.JOB_NAME}")
@@ -28,6 +63,25 @@ def extractVersionNameFromParentBranch(branchName) {
     return ret;
 }
 
+def extractVersionNameWithBranchFallback()
+{
+    def versionName = extractVersionName()
+    def branchName = "${env.BRANCH_NAME}"
+    echo("current branch name is ${branchName}")
+    if ( !(versionName ==~ /[0-9]\.[0-9]/ ) )
+    {
+      echo ("The version number '${versionName}' is not valid. Trying to extract version number from parent branch.")
+      versionName = extractVersionNameFromParentBranch( branchName )
+    }
+
+    if ( !(versionName ==~ /[0-9]\.[0-9]/ ) )
+    {
+      echo ("The version number '${versionName}' is not valid. Trying to get the artifact from a related branch directly.")
+      versionName = extractVersionName()
+    }
+	return versionName;
+}
+
 env.PATH = "${tool 'Ant'}/bin:${env.PATH}"
 
 stage ('Preparations') {
@@ -51,21 +105,8 @@ RUN_TESTS = "$runTests".toBoolean()
 stage ('Test') {
   if( RUN_TESTS ){
     def moduleName = extractModuleName()
-    def versionName = extractVersionName()
-    def branchName = "${env.BRANCH_NAME}"
-    echo("current branch name is ${branchName}")
+    def versionName = extractVersionNameWithBranchFallback()
 
-    if ( !(versionName ==~ /[0-9]\.[0-9]/ ) )
-    {
-      echo ("The version number '${versionName}' is not valid. Trying to extract version number from parent branch.")
-      versionName = extractVersionNameFromParentBranch( branchName )
-    }
-
-    if ( !(versionName ==~ /[0-9]\.[0-9]/ ) )
-    {
-      echo ("The version number '${versionName}' is not valid. Trying to get the artifact from a related branch directly.")
-      versionName = extractVersionName()
-    }
     copyArtifacts(projectName: "Yambas/${versionName}", filter: '**/target/yambas.war', selector: lastSuccessful())
 
     sh "mvn -B -f ${moduleName}-integrationtest/pom.xml clean install -Dyambas_war_dir=../yambas/target/yambas.war -P integrationtest ${MVN_OPTS}"
@@ -74,7 +115,14 @@ stage ('Test') {
 
 stage ('Package') {
   def moduleName = extractModuleName()
-  sh "mvn -B -f ${moduleName}/pom.xml clean install -Dant.target=package"
+  def versionName = extractVersionNameWithBranchFallback()
+
+  if( isVersionGte( versionName, "3.3.0") ) {
+    sh "mvn -B -f ${moduleName}/pom.xml clean com.apiomat.helper:aom-nm-maven-plugin:packageNativeModule"
+  }
+  else {
+    sh "mvn -B -f ${moduleName}/pom.xml clean install -Dant.target=package"
+  }
 }
 
 stage ('Archive') {
