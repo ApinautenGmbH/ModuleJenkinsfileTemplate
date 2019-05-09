@@ -118,7 +118,7 @@ stage ('Package') {
   def versionName = extractVersionNameWithBranchFallback()
 
   if( isVersionGte( versionName, "3.3.0") ) {
-    sh "mvn -B -f ${moduleName}/pom.xml clean compile com.apiomat.helper:aom-nm-maven-plugin:packageNativeModule"
+    sh "mvn -B -f ${moduleName}/pom.xml clean compile com.apiomat.helper:nm-maven-plugin:package"
   }
   else {
     sh "mvn -B -f ${moduleName}/pom.xml clean install -Dant.target=package"
