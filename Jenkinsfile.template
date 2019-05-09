@@ -34,7 +34,8 @@ def isVersionGte( currentVersion, requiredVersion )
 }
 
 @NonCPS
-def extractModuleName() {
+def extractModuleName() 
+{
     echo ("Extracting module name from job name: ${env.JOB_NAME}")
     jobMatcher = "${env.JOB_NAME}".split('/')
     ret = jobMatcher[1]
@@ -42,7 +43,8 @@ def extractModuleName() {
     return ret;
 }
 
-def extractVersionName() {
+def extractVersionName() 
+{
     echo ("Extracting version name from job name: ${env.JOB_NAME}")
     jobMatcher = "${env.JOB_NAME}".split('/')
     ret = jobMatcher[2]
@@ -50,7 +52,8 @@ def extractVersionName() {
     return ret;
 }
 
-def extractVersionNameFromParentBranch(branchName) {
+def extractVersionNameFromParentBranch(branchName) 
+{
 		sh "git config --replace-all remote.origin.fetch +refs/heads/*:refs/remotes/origin/*"
 		sh "git fetch --all"
 		sh "git checkout ${branchName}"
@@ -84,7 +87,8 @@ def extractVersionNameWithBranchFallback()
 
 env.PATH = "${tool 'Ant'}/bin:${env.PATH}"
 
-stage ('Preparations') {
+stage ('Preparations') 
+{
   properties ([
     buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '6')),
     pipelineTriggers([[ $class: 'hudson.triggers.TimerTrigger', spec  : "1 3 * * *"]]),
@@ -103,8 +107,10 @@ stage ('Preparations') {
 RUN_TESTS = "$runTests".toBoolean()
 VERSION_NAME = extractVersionNameWithBranchFallback()
 
-stage ('Test') {
-  if( RUN_TESTS ){
+stage ('Test') 
+{
+  if( RUN_TESTS )
+  {
     def moduleName = extractModuleName()
 
     copyArtifacts(projectName: "Yambas/${VERSION_NAME}", filter: '**/target/yambas.war', selector: lastSuccessful())
@@ -113,18 +119,22 @@ stage ('Test') {
   }
 }
 
-stage ('Package') {
+stage ('Package') 
+{
   def moduleName = extractModuleName()
 
-  if( isVersionGte( VERSION_NAME, "3.3.0") ) {
+  if( isVersionGte( VERSION_NAME, "3.3.0") ) 
+  {
     sh "mvn -B -f ${moduleName}/pom.xml clean compile com.apiomat.helper:nm-maven-plugin:package"
   }
-  else {
+  else 
+  {
     sh "mvn -B -f ${moduleName}/pom.xml clean install -Dant.target=package"
   }
 }
 
-stage ('Archive') {
+stage ('Archive') 
+{
   if( isVersionGte(VERSION_NAME, "3.3.0"))
   {
     archiveArtifacts artifacts: '**/target/*-NM.jar'
@@ -135,8 +145,10 @@ stage ('Archive') {
   }
 }
 
-stage ('Publish') {
-  if( RUN_TESTS ){
+stage ('Publish') 
+{
+  if( RUN_TESTS )
+  {
     openTasks asRegexp: true, canComputeNew: false, defaultEncoding: '',
                   excludePattern: '**/target/**/*.*,**/lib/**', ignoreCase: false,
                   high: '^.*((?:TODO|FIXME|XXX)(?! AOM)(.*))$', low: '^.*(XXX (AOM-\\d+.*))$', normal: '^.*((?:TODO|FIXME) (AOM-\\d+.*))$',
@@ -146,6 +158,7 @@ stage ('Publish') {
   }
 }
 
-stage ('Notifications') {
+stage ('Notifications') 
+{
   cleanWs notFailBuild: true
 }
