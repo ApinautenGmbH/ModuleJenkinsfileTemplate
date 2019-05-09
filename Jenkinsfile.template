@@ -101,13 +101,13 @@ stage ('Preparations') {
 }
 
 RUN_TESTS = "$runTests".toBoolean()
+VERSION_NAME = extractVersionNameWithBranchFallback()
 
 stage ('Test') {
   if( RUN_TESTS ){
     def moduleName = extractModuleName()
-    def versionName = extractVersionNameWithBranchFallback()
 
-    copyArtifacts(projectName: "Yambas/${versionName}", filter: '**/target/yambas.war', selector: lastSuccessful())
+    copyArtifacts(projectName: "Yambas/${VERSION_NAME}", filter: '**/target/yambas.war', selector: lastSuccessful())
 
     sh "mvn -B -f ${moduleName}-integrationtest/pom.xml clean install -Dyambas_war_dir=../yambas/target/yambas.war -P integrationtest ${MVN_OPTS}"
   }
@@ -115,9 +115,8 @@ stage ('Test') {
 
 stage ('Package') {
   def moduleName = extractModuleName()
-  def versionName = extractVersionNameWithBranchFallback()
 
-  if( isVersionGte( versionName, "3.3.0") ) {
+  if( isVersionGte( VERSION_NAME, "3.3.0") ) {
     sh "mvn -B -f ${moduleName}/pom.xml clean compile com.apiomat.helper:nm-maven-plugin:package"
   }
   else {
@@ -126,7 +125,14 @@ stage ('Package') {
 }
 
 stage ('Archive') {
-  archiveArtifacts artifacts: '**/dist/*.jar'
+  if( isVersionGte(VERSION_NAME, "3.3.0"))
+  {
+    archiveArtifacts artifacts: '**/target/*-NM.jar'
+  }
+  else
+  {
+    archiveArtifacts artifacts: '**/dist/*.jar'
+  }
 }
 
 stage ('Publish') {
