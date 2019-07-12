@@ -105,7 +105,7 @@ stage ('Preparations')
 }
 
 MODULE_NAME = extractModuleName()
-RUN_TESTS = "$runTests".toBoolean() && fileExists("${moduleName}-integrationtest")
+RUN_TESTS = "$runTests".toBoolean() && fileExists("${MODULE_NAME}-integrationtest")
 VERSION_NAME = extractVersionNameWithBranchFallback()
 
 stage ('Test') 
