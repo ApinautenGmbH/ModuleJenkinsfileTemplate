@@ -109,7 +109,8 @@ VERSION_NAME = extractVersionNameWithBranchFallback()
 
 stage ('Test') 
 {
-  if( RUN_TESTS )
+  def itDirExists = fileExists '${moduleName}-integrationtest'
+  if( RUN_TESTS && itDirExists )
   {
     def moduleName = extractModuleName()
 
