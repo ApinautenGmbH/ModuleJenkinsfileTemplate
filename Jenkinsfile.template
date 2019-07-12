@@ -104,7 +104,7 @@ stage ('Preparations')
   sh "sudo /var/lib/jenkins/clearMongo.sh"
 }
 
-def moduleName = extractModuleName()
+MODULE_NAME = extractModuleName()
 RUN_TESTS = "$runTests".toBoolean() && fileExists("${moduleName}-integrationtest")
 VERSION_NAME = extractVersionNameWithBranchFallback()
 
@@ -112,7 +112,7 @@ stage ('Test')
 {
   if( RUN_TESTS )
   {
-
+    def moduleName = MODULE_NAME
     copyArtifacts(projectName: "Yambas/${VERSION_NAME}", filter: '**/target/yambas.war', selector: lastSuccessful())
 
     sh "mvn -B -f ${moduleName}-integrationtest/pom.xml clean install -Dyambas_war_dir=../yambas/target/yambas.war -P integrationtest ${MVN_OPTS}"
