@@ -104,13 +104,12 @@ stage ('Preparations')
   sh "sudo /var/lib/jenkins/clearMongo.sh"
 }
 
-RUN_TESTS = "$runTests".toBoolean()
+RUN_TESTS = "$runTests".toBoolean() && fileExists '${moduleName}-integrationtest'
 VERSION_NAME = extractVersionNameWithBranchFallback()
 
 stage ('Test') 
 {
-  def itDirExists = fileExists '${moduleName}-integrationtest'
-  if( RUN_TESTS && itDirExists )
+  if( RUN_TESTS )
   {
     def moduleName = extractModuleName()
 
