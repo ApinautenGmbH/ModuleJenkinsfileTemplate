@@ -63,7 +63,6 @@ def extractVersionName()
       echo ("Could not find any Version Number")
       echo ("Make sure the build job name contains a version in the format: majorVersion.minorversion")
       echo ("E.g jobName: hotfix/NM-279-3.3")
-      ()
     }
 
     return ret;
