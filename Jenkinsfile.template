@@ -49,6 +49,23 @@ def extractVersionName()
     jobMatcher = "${env.JOB_NAME}".split('/')
     ret = jobMatcher[2]
     jobMatcher = null
+    echo ("Extracted job name: " + ret)
+
+    // cut version number from branch name
+    def list = ret.findAll("[0-9]\\.[0-9]")
+    if(list.size() > 0)
+    {
+      ret = list[0]
+      echo ("Found Version Number: " + ret)
+    }
+    else
+    {
+      echo ("Could not find any Version Number")
+      echo ("Make sure the build job name contains a version in the format: majorVersion.minorversion")
+      echo ("E.g jobName: hotfix/NM-279-3.3")
+      ()
+    }
+
     return ret;
 }
 
