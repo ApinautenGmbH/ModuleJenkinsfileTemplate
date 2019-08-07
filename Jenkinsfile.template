@@ -51,7 +51,7 @@ def extractVersionName()
     jobMatcher = null
     echo ("Extracted job name: " + ret)
 
-    // cut version number from branch name
+    // try to cut version number from branch name
     def list = ret.findAll("[0-9]\\.[0-9]")
     if(list.size() > 0)
     {
