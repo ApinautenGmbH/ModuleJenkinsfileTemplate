@@ -70,15 +70,17 @@ def extractVersionName()
 
 def extractVersionNameFromParentBranch(branchName) 
 {
-		sh "git config --replace-all remote.origin.fetch +refs/heads/*:refs/remotes/origin/*"
-		sh "git fetch --all"
-		sh "git checkout ${branchName}"
-    sh( returnStatus: true, script:  'git show-branch -a | grep \'\\*\' | grep -v `git rev-parse --abbrev-ref HEAD` | head -n1 | sed \'s/.*\\[\\(.*\\)\\].*/\\1/\' | sed \'s/[\\^~].*//\' > branch.txt')
+    sh "git config --replace-all remote.origin.fetch +refs/heads/*:refs/remotes/origin/*"
+    sh "git fetch --all"
+    sh "git checkout ${branchName}"
+
+    sh( returnStatus: true, script:  'git log --decorate --simplify-by-decoration --oneline | grep -v "(HEAD" | head -n1 | sed \'s/.* (\(.*\)) .*/\1/\' | sed \'s/\(.*\), .*/\1/\' > branch.txt')
     ret = readFile 'branch.txt'
-		if(ret.startsWith("origin/"))
-		{
-			ret = ret.substring(7).replaceAll("\n","");
-		}
+    if(ret.startsWith("origin/"))
+    {
+      ret = ret.substring(7).replaceAll("\n","");
+    }
+
     return ret;
 }
 
