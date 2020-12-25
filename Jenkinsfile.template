@@ -107,18 +107,37 @@ env.PATH = "${tool 'Ant'}/bin:${env.PATH}"
 
 stage ('Preparations') 
 {
-  properties ([
-    buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '6')),
-    pipelineTriggers([[ $class: 'hudson.triggers.TimerTrigger', spec  : "1 3 * * *"]]),
-    disableConcurrentBuilds(),
-    [$class: 'CopyArtifactPermissionProperty', projectNames: 'Processes/ModuleTests'],
-    parameters(
-      [
-        [$class: 'BooleanParameterDefinition', description: 'Run with tests', name: 'runTests', defaultValue: true]
-      ]
-    )
-  ])
-
+  def branchName = "${env.BRANCH_NAME}"
+  // build only version branches newer thann 3.3.0 regularly
+  if ( (versionName ==~ /[0-9]\.[0-9]/ ) && isVersionGte( VERSION_NAME, "3.4.0") )
+  {
+    properties ([
+      buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '6')),
+      pipelineTriggers([[ $class: 'hudson.triggers.TimerTrigger', spec  : "1 3 * * *"]]),
+      disableConcurrentBuilds(),
+      [$class: 'CopyArtifactPermissionProperty', projectNames: 'Processes/ModuleTests'],
+      parameters(
+        [
+          [$class: 'BooleanParameterDefinition', description: 'Run with tests', name: 'runTests', defaultValue: true]
+        ]
+      )
+    ])
+  }
+  // otherwise poll once a day
+  else
+  {
+    properties ([
+      buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '6')),
+      pipelineTriggers([pollSCM('H H * * *')]),
+      disableConcurrentBuilds(),
+      [$class: 'CopyArtifactPermissionProperty', projectNames: 'Processes/ModuleTests'],
+      parameters(
+        [
+          [$class: 'BooleanParameterDefinition', description: 'Run with tests', name: 'runTests', defaultValue: true]
+        ]
+      )
+    ])  
+  }
   sh "sudo /var/lib/jenkins/clearMongo.sh"
 }
 
