@@ -108,8 +108,8 @@ env.PATH = "${tool 'Ant'}/bin:${env.PATH}"
 stage ('Preparations') 
 {
   def branchName = "${env.BRANCH_NAME}"
-  // build only version branches newer thann 3.3.0 regularly
-  if ( (versionName ==~ /[0-9]\.[0-9]/ ) && isVersionGte( VERSION_NAME, "3.4.0") )
+  // build only version branches newer than 3.3.0 regularly
+  if ( (branchName ==~ /[0-9]\.[0-9]/ ) && isVersionGte( branchName, "3.4.0") )
   {
     properties ([
       buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '6')),
@@ -123,7 +123,7 @@ stage ('Preparations')
       )
     ])
   }
-  // otherwise poll once a day
+  // otherwise poll once a day for changes
   else
   {
     properties ([
