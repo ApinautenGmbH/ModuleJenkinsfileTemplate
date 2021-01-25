@@ -68,6 +68,12 @@ def extractVersionName()
     return ret;
 }
 
+def usesNMPlugin( moduleName )
+{
+  def pomFile = readFile "${env.WORKSPACE}/${moduleName}/pom.xml"
+  return pomFile.contains("nm-maven-plugin")
+}
+
 def extractVersionNameFromParentBranch(branchName) 
 {
     sh "git config --replace-all remote.origin.fetch +refs/heads/*:refs/remotes/origin/*"
@@ -149,30 +155,28 @@ stage ('Test')
 {
   if( RUN_TESTS )
   {
-    def moduleName = MODULE_NAME
     copyArtifacts(projectName: "Yambas/${VERSION_NAME}", filter: '**/target/yambas.war', selector: lastSuccessful())
 
-    sh "mvn -B -f ${moduleName}-integrationtest/pom.xml clean install -Dyambas_war_dir=../yambas/target/yambas.war -P integrationtest ${MVN_OPTS}"
+    sh "mvn -B -f ${MODULE_NAME}-integrationtest/pom.xml clean install -Dyambas_war_dir=../yambas/target/yambas.war -P integrationtest ${MVN_OPTS}"
   }
 }
 
 stage ('Package') 
 {
-  def moduleName = extractModuleName()
 
-  if( isVersionGte( VERSION_NAME, "3.3.0") ) 
+  if( usesNMPlugin( MODULE_NAME ) ) 
   {
-    sh "mvn -B -f ${moduleName}/pom.xml clean compile com.apiomat.helper:nm-maven-plugin:package"
+    sh "mvn -B -f ${MODULE_NAME}/pom.xml clean compile com.apiomat.helper:nm-maven-plugin:package"
   }
   else 
   {
-    sh "mvn -B -f ${moduleName}/pom.xml clean install -Dant.target=package"
+    sh "mvn -B -f ${MODULE_NAME}/pom.xml clean install -Dant.target=package"
   }
 }
 
 stage ('Archive') 
 {
-  if( isVersionGte(VERSION_NAME, "3.3.0"))
+  if( usesNMPlugin( MODULE_NAME ) )
   {
     archiveArtifacts artifacts: '**/target/*-NM.jar'
   }
