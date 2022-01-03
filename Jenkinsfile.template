@@ -190,12 +190,11 @@ stage ('Publish')
 {
   if( RUN_TESTS )
   {
-    openTasks asRegexp: true, canComputeNew: false, defaultEncoding: '',
-                  excludePattern: '**/target/**/*.*,**/lib/**', ignoreCase: false,
-                  high: '^.*((?:TODO|FIXME|XXX)(?! AOM)(.*))$', low: '^.*(XXX (AOM-\\d+.*))$', normal: '^.*((?:TODO|FIXME) (AOM-\\d+.*))$',
-                  pattern: '**/*.java,**/*.iss,**/*.vm,**/*.js,**/*.cs,**/*.swift,**/*.m',
-                  thresholdLimit: 'high'
-    step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
+    recordIssues(tools: [
+      taskScanner(excludePattern: '**/target/**/*.*,**/lib/**', highTags: '^.*((?:TODO|FIXME|XXX)(?! AOM)(.*))$\', low: \'^.*(XXX (AOM-\\\\d+.*))$', ignoreCase: true, includePattern: '**/*.java,**/*.iss,**/*.vm,**/*.js,**/*.cs,**/*.swift,**/*.m', isRegularExpression: true, normalTags: '^.*((?:TODO|FIXME) (AOM-\\\\d+.*))$')
+      ])
+
+    xunit thresholds: [failed(failureThreshold: '4', unstableThreshold: '1')], tools: [[$class: 'JUnitType', deleteOutputFiles: true, failIfNotNew: false, skipNoTestFiles: false, pattern: '**/target/surefire-reports/TEST-*.xml', skipNoTestFiles: false, stopProcessingIfError: true]]
   }
 }
 
